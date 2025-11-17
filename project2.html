@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTB Academy: Attacking Enterprise Networks</title>
+    <link rel="stylesheet" href="style.css"> <!-- Подключаем те же стили -->
+</head>
+<body>
+
+    <main class="project-page">
+        <!-- Кнопка "Назад" -->
+        <a href="index.html" class="back-link">&lt;-- back_to_main.log</a>
+
+        <h1>HTB Academy Path: Attacking Enterprise Networks</h1>
+
+        <section class="project-details">
+            <h2>&gt; Описание пути</h2>
+            <p>
+                "Attacking Enterprise Networks" — это комплексный путь в HTB Academy, посвященный техникам и тактикам тестирования на проникновение в корпоративные сети на базе Windows и Active Directory. Этот путь охватывает полный цикл атаки: от первоначальной разведки и получения точки опоры до повышения привилегий и захвата контроля над доменом.
+            </p>
+
+            <h2>&gt; Ключевые полученные навыки</h2>
+            <ul>
+                <li><strong>Разведка в Active Directory:</strong> Использование BloodHound и PowerShell-инструментов для сбора информации о пользователях, группах, компьютерах и политиках домена.</li>
+                <li><strong>Атаки на Kerberos:</strong> Изучены и применены на практике атаки Kerberoasting.</li>
+                <li><strong>Эксплуатация служб:</strong> Атаки на распространенные службы, такие как SMB, WinRM, и эксплуатация их уязвимостей и слабых конфигураций.</li>
+                <li><strong>Повышение привилегий:</strong> Техники повышения привилегий внутри хоста и в домене.</li>
+                <li><strong>Боковое перемещение (Lateral Movement):</strong> Использование техник Pass-the-Hash и Pass-the-Ticket для перемещения между хостами в сети и доступа к критическим ресурсам.</li>
+            </ul>
+
+            <h2>&gt; Краткие шаги по прохождению задания  </h2>
+            <div class="code-block">
+<pre><code># Шаг 1: Сбор первичных данных с помощью nmap, ffuf и dig.
+# Шаг 2: Определение работающих сервисов на цели используя telnet, rpcinfo, ftp.
+# Шаг 3: Анализ веб-приложений, попытки эксплуатации уязвимостейи их дальнейшее раскручивание. Встретились такие как: IDOR, HTTP verb tampering, CSRF, XSS, SQLi
+# Шаг 4: Получение учётных данных, закрепление в системе используя пивотинг и горизонтальное перемещение
+# Шаг 5: Компрометация всей инфраструктуры AD используя фейковый SPN.
+</code></pre>
+
+            </div>
+
+            <h2>&gt; Итог</h2>
+            <p>
+                Прохождение этого пути дало целостное понимание архитектуры и уязвимостей Active Directory. Получены практические навыки, необходимые для проведения полноценного внутреннего пентеста корпоративной инфраструктуры.
+            </p>
+
+        </section>
+
+    </main>
+
+    <footer>
+        <p>-- EOF --</p>
+    </footer>
+
+</body>
+</html>

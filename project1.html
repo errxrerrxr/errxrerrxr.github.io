@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project: Wi-Fi Security Analysis</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <main class="project-page">
+        <!-- Кнопка "Назад" -->
+        <a href="index.html" class="back-link">&lt;-- back</a>
+
+        <h1>Фаззер директорий на python</h1>
+
+        <section class="project-details">
+            <h2>&gt; Описание задачи</h2>
+            <p>
+	    Разработать фаззер директорий веб-приложения по словарю, для собственного использования на python.
+            </p>
+
+            <h2>&gt; Использованные инструменты и техники</h2>
+            <ul>
+                <li><strong>Python</strong>Использованы и изучены основные библиотеки для работы с сетью, регулярными выражениями и потоками.</li>
+            </ul>
+
+            <h2>&gt; Основной код</h2>
+            <div class="code-block">
+<pre><code>
+import argparse
+import sys
+import os
+import requests
+from colorama import Fore
+import re
+import multiprocessing
+import time
+import base64
+import urllib.parse
+
+
+counter = 1
+
+
+def greetings():
+    print(f'''{Fore.GREEN}
+╔═══╗╔══╗╔═══╗     ╔═══╗╔╗─╔╗╔════╗╔════╗╔═══╗╔═══╗
+╚╗╔╗║╚╣║╝║╔═╗║     ║╔══╝║║─║║╚══╗═║╚══╗═║║╔══╝║╔═╗║
+─║║║║─║║─║╚═╝║     ║╚══╗║║─║║──╔╝╔╝──╔╝╔╝║╚══╗║╚═╝║
+─║║║║─║║─║╔╗╔╝     ║╔══╝║║─║║─╔╝╔╝──╔╝╔╝─║╔══╝║╔╗╔╝
+╔╝╚╝║╔╣║╗║║║╚╗     ║║───║╚═╝║╔╝═╚═╗╔╝═╚═╗║╚══╗║║║╚╗
+╚═══╝╚══╝╚╝╚═╝     ╚╝───╚═══╝╚════╝╚════╝╚═══╝╚╝╚═╝
+        {Fore.RESET}''')
+
+
+def check_app_keys():
+    """Check that flags right"""
+    check_wordlist_file(args.wordlist)
+    check_url_format(args.url)
+
+
+def check_wordlist_file(path_to_wordlist):
+    """Check if wordlist file exist"""
+    if not os.path.isfile(path_to_wordlist.replace("\'", "")):
+        print(f"{path_to_wordlist}\nWordlist did'nt found.")
+        sys.exit(0)
+    fill_dirs_from_file(path_to_wordlist)
+
+
+def check_site_annotaion(hostname):
+    """Check if we can connect to the host"""
+    try:
+        response = requests.get(hostname.split("FUZZ")[0], headers={"User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) "
+                                                                 "AppleWebKit/537.36 (KHTML, like Gecko) "
+                                                                 "Chrome/72.0.3626.119 Safari/537.36"}, timeout=1)
+        response.raise_for_status()
+        if response.status_code == 200:
+            print('OK!')
+    except (requests.exceptions.HTTPError, requests.exceptions.Timeout, requests.exceptions.ConnectionError,) as e:
+        print(f'{Fore.RED}ERROR: Connection error!{Fore.RESET}')
+        sys.exit(0)
+    set_url_format("".join(hostname))
+
+
+def check_url_format(hostname):
+    correct_url = re.findall(r'https?://(?:[a-zA-Z]|\d|[$-_@.&+]|[!*\\,]|(%[\da-fA-F][\da-fA-F]))+', hostname)
+    if correct_url:
+        check_site_annotaion(hostname)
+    else:
+        print(f"{Fore.RED}ERROR: Invalid URL format!{Fore.RESET}")
+
+
+def fill_dirs_from_file(dirs_file):
+    """Read dirs from specified file"""
+    with open(dirs_file, "r") as reader:
+        for line in reader.readlines():
+            if args.urlencode:
+                line = urllib.parse.quote(line)
+            dirs.append(line)
+    print("\nReaded lines from wordlist: " + str(len(dirs)) + "\n")
+
+
+def set_url_format(hostname):
+    """Check for url format"""
+    if hostname[-1] != "/":
+        hostname += "/"
+    get_site_dirs(hostname)
+
+
+def printing_all(length_dirs, status_code, url):
+    global counter
+    code_status = {"2": Fore.GREEN, "4": Fore.RED, "3": Fore.BLUE}
+    print_string = f"{counter:>08d} of {length_dirs}\t" \
+                   f"{code_status[status_code[0]] + str(status_code) + Fore.RESET}\t{url}"
+    if status_code[0] in code_status.keys():
+        if status_code == "404":
+            print("\r" + print_string, end=" " * 10)
+        else:
+            print("\r" + print_string)
+
+
+def get_site_dirs(hostname):
+    """Check site directories"""
+    print(f"\nWork with site: {args.url.split('FUZZ')[0]}. Path to wordlist {args.wordlist}\n")    try:
+        for target_dir in dirs:
+            dir_correct = target_dir.strip()
+            if args.extension:
+                dir_correct += f".{args.extension}"
+            elif args.base64:
+                enc_dir = base64.b64encode(dir_correct.encode("utf-8"))
+                dir_correct = str(enc_dir, "utf-8")
+            target_url = hostname.replace("FUZZ", dir_correct)
+            correct_urls.append(target_url)
+        if args.threads:
+            multiprocessing_exec()
+        else:
+            for url in correct_urls:
+                fuzzing(url)
+    except KeyboardInterrupt:
+        sys.exit(0)
+
+
+def multiprocessing_exec():
+    try:
+        pool = multiprocessing.Pool()
+        results = pool.map(fuzzing, correct_urls)
+    except KeyboardInterrupt:
+        sys.exit(0)
+
+
+def fuzzing(target_url):
+    global counter
+    try:
+        if args.header:
+            headers_1 = []
+            headers_all = args.header.split(",")
+            for header in headers_all:
+                sep_headers = header.split(":")
+                for elem in sep_headers:
+                    headers_1.append(elem.strip())
+                headers_dct = {headers_1[i]: headers_1[i + 1] for i in range(0, len(headers_1), 2)}
+                requests.get(target_url, headers=headers_dct, allow_redirects=False)
+        host_answer = requests.get(target_url, allow_redirects=False)
+        counter += 1
+        printing_all(len(dirs), str(host_answer.status_code), target_url)
+        with lock:
+            with open('fuzz.txt', 'a') as dirsearch_results:
+                dirsearch_results.writelines(f"{counter:>08d} of {len(dirs)}"
+                                             f"\t{host_answer.status_code}\t{target_url}\n")
+    except KeyboardInterrupt:
+        time.sleep(2)
+        print(f'{Fore.RED}\nERROR: manually stop Ctrl+C {Fore.RESET}')
+        sys.exit(0)
+
+
+if __name__ == "__main__":
+    dirs = []
+    correct_urls = []
+    lock = multiprocessing.Lock()
+
+    parser = argparse.ArgumentParser(description='Dir fazzer')
+    parser.add_argument('-u', '--url', required=True, help='Enter domain https://site.com')
+    parser.add_argument('-w', '--wordlist', required=True, help='Name and path of the wordlist')
+    parser.add_argument('-t', '--threads', required=False, help='Number of threads')
+    parser.add_argument('-e', '--extension', required=False, help='Extension type')
+    parser.add_argument('-b', '--base64', required=False, action='store_true', help='Encode in base64 format')
+    parser.add_argument('-c', '--urlencode', required=False, action='store_true',  help='Encode in URL format')
+    parser.add_argument('-j', '--header', required=False, help='Send header with dir')
+    if len(sys.argv) <= 1:
+        parser.print_help()
+    else:
+        args = parser.parse_args()
+        greetings()
+        check_app_keys()
+</code></pre>
+            </div>
+
+            <h2>&gt; Результаты и выводы</h2>
+            <p>
+               Удалось написать код который позволял быстро и удобно сканировать веб-директории приложений, используя командную оболочку. 
+                <br><br>
+            </p>
+
+        </section>
+
+    </main>
+
+    <footer>
+        <p>-- EOF --</p>
+    </footer>
+
+</body>
+</html>
